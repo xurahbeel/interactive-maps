@@ -31,6 +31,38 @@ export const mapOptionsForContainer = (
   zoom: DEFAULT_VIEW.zoom,
 });
 
+export const flyToUsaView = (map: mapboxgl.Map): void => {
+  map.flyTo({
+    center: DEFAULT_VIEW.center,
+    zoom: DEFAULT_VIEW.zoom,
+    essential: true,
+  });
+};
+
+export const flyToUserLngLat = (
+  map: mapboxgl.Map,
+  lngLat: [number, number],
+): void => {
+  map.flyTo({
+    center: lngLat,
+    zoom: USER_LOCATION_ZOOM,
+    essential: true,
+  });
+};
+
+export const setUserLocationMarker = (
+  map: mapboxgl.Map,
+  lngLat: [number, number],
+  previous: mapboxgl.Marker | null,
+): mapboxgl.Marker => {
+  previous?.remove();
+  return new mapboxgl.Marker({ color: USER_MARKER_COLOR })
+    .setLngLat(lngLat)
+    .addTo(map);
+};
+
+type UserMarkerRef = { current: mapboxgl.Marker | null };
+
 /**
  * After style loads, asks for geolocation; on success flies to user and adds a marker.
  * On deny/error, default view stays. `shouldAbort` is checked before touching the map.
@@ -38,6 +70,7 @@ export const mapOptionsForContainer = (
 export const seedMapWithUserLocation = (
   map: mapboxgl.Map,
   shouldAbort: () => boolean,
+  userMarkerRef: UserMarkerRef,
 ): void => {
   map.once("load", () => {
     if (shouldAbort() || !navigator.geolocation) return;
@@ -45,18 +78,16 @@ export const seedMapWithUserLocation = (
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         if (shouldAbort()) return;
-        const { longitude, latitude } = pos.coords;
-        const lngLat: [number, number] = [longitude, latitude];
-
-        map.flyTo({
-          center: lngLat,
-          zoom: USER_LOCATION_ZOOM,
-          essential: true,
-        });
-
-        new mapboxgl.Marker({ color: USER_MARKER_COLOR })
-          .setLngLat(lngLat)
-          .addTo(map);
+        const lngLat: [number, number] = [
+          pos.coords.longitude,
+          pos.coords.latitude,
+        ];
+        flyToUserLngLat(map, lngLat);
+        userMarkerRef.current = setUserLocationMarker(
+          map,
+          lngLat,
+          userMarkerRef.current,
+        );
       },
       () => {
         /* keep default view */
