@@ -16,6 +16,10 @@ export const USER_LOCATION_ZOOM = 12;
 
 export const USER_MARKER_COLOR = "#2563eb";
 
+export const SEARCH_RESULT_ZOOM = 14;
+
+export const SEARCH_MARKER_COLOR = "#c2410c";
+
 export const GEOLOCATION_OPTIONS = {
   enableHighAccuracy: false,
   maximumAge: 300_000,
@@ -57,6 +61,28 @@ export const setUserLocationMarker = (
 ): mapboxgl.Marker => {
   previous?.remove();
   return new mapboxgl.Marker({ color: USER_MARKER_COLOR })
+    .setLngLat(lngLat)
+    .addTo(map);
+};
+
+export const flyToSearchLngLat = (
+  map: mapboxgl.Map,
+  lngLat: [number, number],
+): void => {
+  map.flyTo({
+    center: lngLat,
+    zoom: SEARCH_RESULT_ZOOM,
+    essential: true,
+  });
+};
+
+export const setSearchResultMarker = (
+  map: mapboxgl.Map,
+  lngLat: [number, number],
+  previous: mapboxgl.Marker | null,
+): mapboxgl.Marker => {
+  previous?.remove();
+  return new mapboxgl.Marker({ color: SEARCH_MARKER_COLOR })
     .setLngLat(lngLat)
     .addTo(map);
 };

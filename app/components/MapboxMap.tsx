@@ -3,11 +3,13 @@
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import {
+  flyToSearchLngLat,
   flyToUsaView,
   flyToUserLngLat,
   mapOptionsForContainer,
   MISSING_MAPBOX_TOKEN_HINT,
   seedMapWithUserLocation,
+  setSearchResultMarker,
   setUserLocationMarker,
   GEOLOCATION_OPTIONS,
 } from "@/app/lib/seeder";
@@ -22,6 +24,7 @@ import {
 export type MapboxMapHandle = {
   showUsa: () => void;
   showCurrentLocation: () => void;
+  flyToSearchResult: (lngLat: [number, number]) => void;
 };
 
 type MapboxMapProps = {
@@ -33,6 +36,7 @@ const MapboxMap = forwardRef<MapboxMapHandle, MapboxMapProps>(
     const containerRef = useRef<HTMLDivElement>(null);
     const mapRef = useRef<mapboxgl.Map | null>(null);
     const userMarkerRef = useRef<mapboxgl.Marker | null>(null);
+    const searchMarkerRef = useRef<mapboxgl.Marker | null>(null);
     const [hint, setHint] = useState<string | null>(null);
 
     useImperativeHandle(ref, () => ({
@@ -41,6 +45,8 @@ const MapboxMap = forwardRef<MapboxMapHandle, MapboxMapProps>(
         if (!map) return;
         userMarkerRef.current?.remove();
         userMarkerRef.current = null;
+        searchMarkerRef.current?.remove();
+        searchMarkerRef.current = null;
         flyToUsaView(map);
       },
       showCurrentLocation: () => {
@@ -53,6 +59,8 @@ const MapboxMap = forwardRef<MapboxMapHandle, MapboxMapProps>(
               pos.coords.longitude,
               pos.coords.latitude,
             ];
+            searchMarkerRef.current?.remove();
+            searchMarkerRef.current = null;
             flyToUserLngLat(map, lngLat);
             userMarkerRef.current = setUserLocationMarker(
               map,
@@ -64,6 +72,16 @@ const MapboxMap = forwardRef<MapboxMapHandle, MapboxMapProps>(
             /* denied or error */
           },
           GEOLOCATION_OPTIONS,
+        );
+      },
+      flyToSearchResult: (lngLat) => {
+        const map = mapRef.current;
+        if (!map) return;
+        flyToSearchLngLat(map, lngLat);
+        searchMarkerRef.current = setSearchResultMarker(
+          map,
+          lngLat,
+          searchMarkerRef.current,
         );
       },
     }));
@@ -89,6 +107,8 @@ const MapboxMap = forwardRef<MapboxMapHandle, MapboxMapProps>(
         cancelled = true;
         userMarkerRef.current?.remove();
         userMarkerRef.current = null;
+        searchMarkerRef.current?.remove();
+        searchMarkerRef.current = null;
         map.remove();
         mapRef.current = null;
       };

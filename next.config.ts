@@ -9,7 +9,11 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: true,
   },
-  transpilePackages: ["mapbox-gl"],
+  transpilePackages: [
+    "mapbox-gl",
+    "@mapbox/search-js-react",
+    "@mapbox/search-js-web",
+  ],
 };
 
 export default nextConfig;

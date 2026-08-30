@@ -2,11 +2,18 @@
 
 import { CloseIcon, MenuIcon } from "@/app/components/icons";
 import MapboxMap, { type MapboxMapHandle } from "@/app/components/MapboxMap";
+import dynamic from "next/dynamic";
 import { useCallback, useRef, useState } from "react";
+
+const LocationSearch = dynamic(
+  () => import("@/app/components/LocationSearch"),
+  { ssr: false },
+);
 
 export default function MapPage() {
   const mapRef = useRef<MapboxMapHandle>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const accessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN ?? "";
 
   const closeSidebar = useCallback(() => setSidebarOpen(false), []);
 
@@ -81,6 +88,16 @@ export default function MapPage() {
           >
             <MenuIcon />
           </button>
+        ) : null}
+
+        {accessToken ? (
+          <div className="pointer-events-none absolute top-3 right-3 z-20 w-[min(20rem,calc(100%-3.5rem))]">
+            <LocationSearch
+              accessToken={accessToken}
+              className="pointer-events-auto"
+              onNavigate={(lngLat) => mapRef.current?.flyToSearchResult(lngLat)}
+            />
+          </div>
         ) : null}
 
         <MapboxMap ref={mapRef} className="h-full w-full" />
