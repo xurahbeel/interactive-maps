@@ -13,3 +13,7 @@ pnpm dev
 # or
 bun dev
 ```
+
+
+deployed at:
+https://xurahbeel.github.io/interactive-maps/
